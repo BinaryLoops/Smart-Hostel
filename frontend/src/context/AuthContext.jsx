@@ -23,6 +23,32 @@ const AuthContext = createContext(null)
 
 const DEMO_USER_KEY = 'shp-demo-user'
 
+function generateRichDemoProfile(email) {
+  const genderType = Math.random() > 0.5 ? 'Male' : 'Female'
+  let block
+  if (genderType === 'Male') {
+     const mb = ['A', 'D1', 'D2', 'E', 'C-Boys']
+     block = mb[Math.floor(Math.random() * mb.length)]
+  } else {
+     const gb = ['B', 'C-Girls']
+     block = gb[Math.floor(Math.random() * gb.length)]
+  }
+  
+  return {
+    role: 'student',
+    name: email?.split('@')[0] || 'Guest',
+    email,
+    gender: genderType,
+    block: block,
+    roomNumber: `${Math.floor(Math.random()*12)+1}${Math.floor(Math.random()*40)+10}`,
+    course: 'CSE Core',
+    courseName: 'B.Tech',
+    hostelRank: Math.floor(Math.random() * 500) + 1,
+    bedType: '2 bed AC',
+    regNumber: `20BCE${Math.floor(1000 + Math.random() * 9000)}`
+  }
+}
+
 function loadDemoUser() {
   try {
     const raw = localStorage.getItem(DEMO_USER_KEY)
@@ -56,7 +82,11 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.warn("Firebase fetch failed, falling back to local demo profile:", err.message)
       const demo = loadDemoUser()
-      setProfile(demo?.profile ?? { role: 'student', name: email?.split('@')[0] ?? 'Guest', email })
+      let profilePayload = demo?.profile ?? generateRichDemoProfile(email)
+      if (email?.includes('admin')) profilePayload = { role: 'admin', name: email.split('@')[0] }
+      setProfile(profilePayload)
+      // Implicitly push to DB if demo backend is up
+      api.adminUpsertStudent(uid, 'admin', { id: uid, ...profilePayload }).catch(()=>null)
     }
   }, [])
 
@@ -83,14 +113,17 @@ export function AuthProvider({ children }) {
   const login = useCallback(
     async (email, password) => {
       if (!firebaseReady || !auth) {
+        let role = email.includes('admin') ? 'admin' : 'student'
+        const demoProfile = role === 'admin' ? { role: 'admin', name: email.split('@')[0] } : generateRichDemoProfile(email)
         const demo = {
           uid: 'demo-' + email,
           email,
-          profile: { role: email.includes('admin') ? 'admin' : 'student', name: email.split('@')[0] },
+          profile: demoProfile,
         }
         localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demo))
         setUser({ uid: demo.uid, email, emailVerified: true })
         setProfile(demo.profile)
+        api.adminUpsertStudent(demo.uid, 'admin', { id: demo.uid, ...demo.profile }).catch(()=>null)
         return
       }
       await signInWithEmailAndPassword(auth, email, password)
@@ -101,14 +134,16 @@ export function AuthProvider({ children }) {
   const signup = useCallback(
     async (email, password, name, role = 'student') => {
       if (!firebaseReady || !auth || !db) {
+        const demoProfile = role === 'admin' ? { role: 'admin', name } : { ...generateRichDemoProfile(email), name, role }
         const demo = {
           uid: 'demo-' + email,
           email,
-          profile: { role, name, email },
+          profile: demoProfile,
         }
         localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demo))
         setUser({ uid: demo.uid, email, emailVerified: true })
         setProfile(demo.profile)
+        api.adminUpsertStudent(demo.uid, 'admin', { id: demo.uid, ...demo.profile }).catch(()=>null)
         return
       }
       const cred = await createUserWithEmailAndPassword(auth, email, password)
@@ -135,14 +170,17 @@ export function AuthProvider({ children }) {
 
     // Fallback only for non-Firebase local demo mode
     if (!firebaseReady || !auth) {
-      const demo = {
-        uid: username,
-        email: `${username}@vtop.local`,
-        profile: { role: 'student', name: username },
-      }
-      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demo))
-      setUser({ uid: demo.uid, email: demo.email, emailVerified: true })
-      setProfile(demo.profile)
+        const demoProfile = generateRichDemoProfile(`${username}@vtop.local`)
+        demoProfile.name = username
+        const demo = {
+          uid: username,
+          email: `${username}@vtop.local`,
+          profile: demoProfile,
+        }
+        localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demo))
+        setUser({ uid: demo.uid, email: demo.email, emailVerified: true })
+        setProfile(demo.profile)
+        api.adminUpsertStudent(demo.uid, 'admin', { id: demo.uid, ...demo.profile }).catch(()=>null)
     }
   }, [])
 
@@ -155,14 +193,17 @@ export function AuthProvider({ children }) {
 
   const loginWithGoogle = useCallback(async () => {
     if (!firebaseReady || !auth) {
+      const demoProfile = generateRichDemoProfile('demo.google@example.com')
+      demoProfile.name = 'Google Demo User'
       const demo = {
         uid: 'demo-google',
         email: 'demo.google@example.com',
-        profile: { role: 'student', name: 'Google Demo User' },
+        profile: demoProfile,
       }
       localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demo))
       setUser({ uid: demo.uid, email: demo.email, emailVerified: true })
       setProfile(demo.profile)
+      api.adminUpsertStudent(demo.uid, 'admin', { id: demo.uid, ...demo.profile }).catch(()=>null)
       return
     }
     const provider = new GoogleAuthProvider()

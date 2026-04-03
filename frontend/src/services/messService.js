@@ -5,7 +5,17 @@ const LOCAL_KEY = 'shp-mess-feedback'
 
 function localList() {
   try {
-    return JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]')
+    let list = JSON.parse(localStorage.getItem(LOCAL_KEY))
+    if (!list || list.length === 0) {
+       list = [
+         { id: '1', rating: 5, meal: 'breakfast', comment: 'Idli was really good today', createdAt: new Date().toISOString() },
+         { id: '2', rating: 2, meal: 'lunch', comment: 'Rajma was too spicy', createdAt: new Date(Date.now() - 86400000).toISOString() },
+         { id: '3', rating: 4, meal: 'dinner', comment: 'Paneer curry was decent', createdAt: new Date(Date.now() - 172800000).toISOString() },
+         { id: '4', rating: 5, meal: 'lunch', comment: 'Healthy salad', createdAt: new Date(Date.now() - 259200000).toISOString() },
+       ]
+       localStorage.setItem(LOCAL_KEY, JSON.stringify(list))
+    }
+    return list
   } catch {
     return []
   }
