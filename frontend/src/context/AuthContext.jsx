@@ -44,13 +44,19 @@ export function AuthProvider({ children }) {
       return
     }
     const ref = doc(db, 'users', uid)
-    const snap = await getDoc(ref)
-    if (snap.exists()) {
-      setProfile(snap.data())
-    } else {
-      const fallback = { role: 'student', name: email?.split('@')[0] ?? 'Student', email }
-      await setDoc(ref, fallback)
-      setProfile(fallback)
+    try {
+      const snap = await getDoc(ref)
+      if (snap.exists()) {
+        setProfile(snap.data())
+      } else {
+        const fallback = { role: 'student', name: email?.split('@')[0] ?? 'Student', email }
+        await setDoc(ref, fallback)
+        setProfile(fallback)
+      }
+    } catch (err) {
+      console.warn("Firebase fetch failed, falling back to local demo profile:", err.message)
+      const demo = loadDemoUser()
+      setProfile(demo?.profile ?? { role: 'student', name: email?.split('@')[0] ?? 'Guest', email })
     }
   }, [])
 

@@ -20,6 +20,7 @@ import { Sparkles, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { StudentsPanel } from '../components/admin/StudentsPanel'
 import { ActivityLogsPanel } from '../components/admin/ActivityLogsPanel'
+import { AlertTriangle } from 'lucide-react'
 
 const complaintTrend = [
   { week: 'W1', open: 12, resolved: 8 },
@@ -45,17 +46,25 @@ export function AdminDashboard() {
   const [items, setItems] = useState([])
   const [summary, setSummary] = useState('')
   const [loadingAi, setLoadingAi] = useState(false)
+  const [redAlerts, setRedAlerts] = useState([])
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const list = await listMessFeedback()
-      if (!cancelled) setItems(list)
+      const [list, entryRes] = await Promise.all([
+         listMessFeedback(),
+         api.adminListEntryExitLogs(userId, role).catch(() => ({items:[]}))
+      ])
+      if (!cancelled) {
+         setItems(list)
+         const alerts = (entryRes.items || []).filter(l => l.isRedAlert)
+         setRedAlerts(alerts)
+      }
     })()
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [userId, role])
 
   const foodStats = useMemo(() => {
     const map = {}
@@ -104,6 +113,24 @@ export function AdminDashboard() {
           </Button>
         }
       />
+
+      {redAlerts.length > 0 && (
+        <Card className="mb-6 border border-[var(--danger)]/50 bg-[var(--danger)]/10 p-4">
+           <div className="flex items-center gap-2 text-[var(--danger)]">
+             <AlertTriangle className="h-5 w-5" />
+             <h3 className="font-semibold">CRITICAL CODE OF CONDUCT BREACHES ({redAlerts.length})</h3>
+           </div>
+           <div className="mt-3 grid gap-2">
+             {redAlerts.slice(0, 5).map((alert, i) => (
+                <div key={i} className="rounded-xl border border-[var(--danger)]/20 bg-[var(--bg-elevated)] p-3 text-sm">
+                   <p className="font-semibold text-[var(--text-primary)]">{alert.studentName} ({alert.studentBlock})</p>
+                   <p className="text-[var(--danger)] mt-1">{alert.alertReason}</p>
+                   <p className="text-[10px] text-[var(--text-secondary)] mt-1">{new Date(alert.actualAt).toLocaleString()}</p>
+                </div>
+             ))}
+           </div>
+        </Card>
+      )}
 
       {summary && (
         <Card className="mb-6 border-[var(--accent)]/30 bg-[var(--accent-soft)]/40 p-4">

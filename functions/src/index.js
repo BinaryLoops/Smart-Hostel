@@ -52,21 +52,59 @@ async function vtopSessionLogin({ username, password }) {
 }
 
 async function fetchHostelData(client) {
-  // Generate random demo data
-  const blocks = ['A Block', 'B Block', 'C Block', 'D Block']
-  const randomBlock = blocks[Math.floor(Math.random() * blocks.length)]
-  const randomRoom = Math.floor(Math.random() * 800) + 101 // rooms 101-900
+  const genderType = Math.random() > 0.5 ? 'Male' : 'Female'
+  let block
+  let gender 
+  if (genderType === 'Male') {
+     const mb = ['A', 'D1', 'D2', 'E', 'C-Boys']
+     block = mb[Math.floor(Math.random() * mb.length)]
+     gender = 'Male'
+  } else {
+     const gb = ['B', 'C-Girls']
+     block = gb[Math.floor(Math.random() * gb.length)]
+     gender = 'Female'
+  }
+  
+  const roomFloors = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+  const floor = roomFloors[Math.floor(Math.random() * roomFloors.length)]
+  const num = Math.floor(Math.random() * 40) + 1
+  const roomNumber = `${floor}${num < 10 ? '0'+num : num}`
+
+  const bedTypes = ['2 bed AC', '2 bed NON-AC', '3 bed AC', '3 bed NON-AC', '4 bed AC', '4 bed NON-AC', '6 bed NON-AC']
+  const bedType = bedTypes[Math.floor(Math.random() * bedTypes.length)]
+
+  const courseNames = ['B.Tech', 'M.Tech', 'BBA', 'BCA', 'B.Sc']
+  const courseName = courseNames[Math.floor(Math.random() * courseNames.length)]
+
+  const courses = ['CSE Core', 'CSE Spec - AI/ML', 'CSE Spec - Cyber Security', 'ECE', 'Mechanical', 'Civil']
+  const course = courses[Math.floor(Math.random() * courses.length)]
+
+  const hostelRank = Math.floor(Math.random() * 500) + 1
+
+  const namesM = ['Rahul Kumar', 'Arjun Singh', 'Vikram Desai', 'Aditya Verma']
+  const namesF = ['Priya Sharma', 'Sneha Gupta', 'Anjali N', 'Riya Mehra']
+  const name = gender === 'Male' ? namesM[Math.floor(Math.random() * namesM.length)] : namesF[Math.floor(Math.random() * namesF.length)]
+
+  const regNumber = `20${courseName === 'B.Tech' ? 'BCE' : 'BBA'}${Math.floor(1000 + Math.random() * 9000)}`
+  const phoneNumber = `+91 ${Math.floor(6000000000 + Math.random() * 3999999999)}`
 
   const messTypes = ['Special Mess', 'Non-Veg Mess', 'Veg Mess']
-  const randomMess = messTypes[Math.floor(Math.random() * messTypes.length)]
-
-  const randomOutings = Math.floor(Math.random() * 5) + 1 // 1-5 outings
+  const messType = messTypes[Math.floor(Math.random() * messTypes.length)]
+  const outingsRemaining = Math.floor(Math.random() * 5) + 1
 
   return {
-    block: randomBlock,
-    room: String(randomRoom),
-    messType: randomMess,
-    outings: randomOutings
+    name,
+    regNumber,
+    roomNumber,
+    bedType,
+    block,
+    courseName,
+    course,
+    hostelRank,
+    gender,
+    phoneNumber,
+    messType,
+    outingsRemaining
   }
 }
 

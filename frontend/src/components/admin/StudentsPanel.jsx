@@ -182,10 +182,18 @@ export function StudentsPanel({ userId, role }) {
               <tbody>
                 {items.slice(0, 8).map((s) => (
                   <tr key={s.id} className="border-t border-[var(--border-subtle)]/60">
-                    <td className="py-2 pr-3 font-mono text-[var(--text-primary)]">{s.id}</td>
-                    <td className="py-2 pr-3 text-[var(--text-primary)]">{s.name}</td>
+                    <td className="py-2 pr-3 font-mono text-[var(--text-primary)]">
+                       {s.regNumber || s.id}
+                       {s.course && <div className="text-[10px] text-[var(--accent)]">{s.course} ({s.courseName})</div>}
+                    </td>
+                    <td className="py-2 pr-3 text-[var(--text-primary)]">
+                       {s.name}
+                       {s.gender && <div className="text-[10px] text-[var(--text-secondary)]">{s.gender}</div>}
+                    </td>
                     <td className="py-2 pr-3 text-[var(--text-secondary)]">
                       {s.block ? `Block ${s.block}` : ''} {s.roomNumber}
+                      {s.bedType && <div className="text-[10px]">{s.bedType}</div>}
+                      {s.hostelRank && <div className="text-[10px] text-[var(--chart-1)]">Rank: {s.hostelRank}</div>}
                     </td>
                     <td className="py-2 text-[var(--text-secondary)]">{s.role}</td>
                   </tr>

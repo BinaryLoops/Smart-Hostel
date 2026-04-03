@@ -151,6 +151,7 @@ export const api = {
 
   // Entry/Exit logs
   entryExitMy: (userId) => request('/api/entry-exit/me', { headers: withUser(userId) }),
+  adminListEntryExitLogs: (userId, role) => request('/api/entry-exit', { headers: withRole(role, withUser(userId)) }),
   entryExitCreate: (userId, body) =>
     request('/api/entry-exit', { method: 'POST', headers: withUser(userId), body: JSON.stringify(body) }),
 

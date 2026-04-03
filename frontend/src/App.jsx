@@ -19,6 +19,7 @@ import { Events } from './pages/Events'
 import { AdminDashboard } from './pages/AdminDashboard'
 import { Logs } from './pages/Logs'
 import { Hospital } from './pages/Hospital'
+import { ScannerSimulator } from './pages/ScannerSimulator'
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
               <Route path="gym" element={<Gym />} />
               <Route path="events" element={<Events />} />
               <Route path="hospital" element={<Hospital />} />
+              <Route path="scanner-mock" element={<ScannerSimulator />} />
               <Route
                 path="admin"
                 element={

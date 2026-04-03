@@ -15,6 +15,7 @@ import {
   HeartPulse,
   Shield,
   Sparkles,
+  Camera
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
@@ -34,7 +35,10 @@ const studentLinks = [
   { to: '/hospital', label: 'Hospital', icon: HeartPulse },
 ]
 
-const adminLinks = [{ to: '/admin', label: 'Admin Console', icon: Shield }]
+const adminLinks = [
+  { to: '/admin', label: 'Warden Console', icon: Shield },
+  { to: '/scanner-mock', label: 'Hardware Scanners', icon: Camera }
+]
 
 export function Sidebar() {
   const { isAdmin } = useAuth()
