@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", var(--font-sans);
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] transition-colors duration-300;
+  }
+}
+
+/* Light theme — soft warm gray, not plain white */
+:root {
+  --bg-base: #f4f2ef;
+  --bg-elevated: #ffffff;
+  --bg-muted: #ebe8e3;
+  --bg-sidebar: rgba(255, 255, 255, 0.72);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --accent: #0d9488;
+  --accent-soft: rgba(13, 148, 136, 0.12);
+  --accent-glow: rgba(13, 148, 136, 0.35);
+  --danger: #dc2626;
+  --chart-1: #0d9488;
+  --chart-2: #6366f1;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+}
+
+.dark {
+  --bg-base: #0c0f14;
+  --bg-elevated: #141a22;
+  --bg-muted: #1a222d;
+  --bg-sidebar: rgba(20, 26, 34, 0.85);
+  --border-subtle: rgba(148, 163, 184, 0.12);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --accent: #2dd4bf;
+  --accent-soft: rgba(45, 212, 191, 0.15);
+  --accent-glow: rgba(45, 212, 191, 0.25);
+  --danger: #f87171;
+  --chart-1: #2dd4bf;
+  --chart-2: #818cf8;
+  --chart-3: #fbbf24;
+  --chart-4: #f472b6;
+}
