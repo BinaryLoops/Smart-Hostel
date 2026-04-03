@@ -11,6 +11,8 @@ import {
   onAuthStateChanged,
   signInWithCustomToken,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
 } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
@@ -145,6 +147,23 @@ export function AuthProvider({ children }) {
     setProfile(null)
   }, [])
 
+  const loginWithGoogle = useCallback(async () => {
+    if (!firebaseReady || !auth) {
+      const demo = {
+        uid: 'demo-google',
+        email: 'demo.google@example.com',
+        profile: { role: 'student', name: 'Google Demo User' },
+      }
+      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demo))
+      setUser({ uid: demo.uid, email: demo.email, emailVerified: true })
+      setProfile(demo.profile)
+      return
+    }
+    const provider = new GoogleAuthProvider()
+    const cred = await signInWithPopup(auth, provider)
+    await fetchProfile(cred.user.uid, cred.user.email)
+  }, [fetchProfile])
+
   const value = useMemo(
     () => ({
       user,
@@ -153,12 +172,13 @@ export function AuthProvider({ children }) {
       firebaseReady,
       demoMode: !firebaseReady,
       login,
+      loginWithGoogle,
       loginWithVtop,
       signup,
       logout,
       isAdmin: profile?.role === 'admin',
     }),
-    [user, profile, loading, login, loginWithVtop, signup, logout]
+    [user, profile, loading, login, loginWithGoogle, loginWithVtop, signup, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

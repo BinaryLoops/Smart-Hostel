@@ -47,92 +47,27 @@ function extractByLabel($, label) {
 }
 
 async function vtopSessionLogin({ username, password }) {
-  const jar = new CookieJar()
-  const client = wrapper(
-    axios.create({
-      jar,
-      withCredentials: true,
-      timeout: 20000,
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36',
-      },
-      maxRedirects: 0,
-      validateStatus: () => true,
-    })
-  )
-
-  // Step 1: open landing page to establish cookies
-  await client.get('https://vtopcc.vit.ac.in/vtop/')
-
-  // Step 2: attempt login (VTOP can change forms/captcha; this is best-effort)
-  // Many VTOP instances use endpoint similar to /vtop/doLogin (may differ).
-  const loginEndpoints = [
-    'https://vtopcc.vit.ac.in/vtop/doLogin',
-    'https://vtopcc.vit.ac.in/vtop/login',
-    'https://vtopcc.vit.ac.in/vtop/processLogin',
-  ]
-
-  let loggedIn = false
-  let lastHtml = ''
-  for (const url of loginEndpoints) {
-    const res = await client.post(
-      url,
-      new URLSearchParams({
-        username,
-        password,
-      }).toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    )
-
-    lastHtml = typeof res.data === 'string' ? res.data : ''
-    // Heuristic: after login, page usually contains "V-TOP" portal elements.
-    if (res.status === 200 && /logout|dashboard|v-top|vtop/i.test(lastHtml)) {
-      loggedIn = true
-      break
-    }
-    // Redirect can also indicate success
-    if (res.status >= 300 && res.status < 400) {
-      loggedIn = true
-      break
-    }
-  }
-
-  if (!loggedIn) {
-    throw new Error('VTOP login failed (form/captcha may be required)')
-  }
-
-  return client
+  // Mock login for demo purposes
+  return { isMocked: true, username }
 }
 
 async function fetchHostelData(client) {
-  // Try a few likely pages; VTOP changes these paths.
-  const candidates = [
-    'https://vtopcc.vit.ac.in/vtop/hostel/hostelRoomInformation',
-    'https://vtopcc.vit.ac.in/vtop/hostel/hostelStudentRoomInfo',
-    'https://vtopcc.vit.ac.in/vtop/hostel/hostelInfo',
-    'https://vtopcc.vit.ac.in/vtop/hostel',
-  ]
+  // Generate random demo data
+  const blocks = ['A Block', 'B Block', 'C Block', 'D Block']
+  const randomBlock = blocks[Math.floor(Math.random() * blocks.length)]
+  const randomRoom = Math.floor(Math.random() * 800) + 101 // rooms 101-900
 
-  let html = ''
-  for (const url of candidates) {
-    const res = await client.get(url)
-    if (typeof res.data === 'string' && res.data.length > 1000) {
-      html = res.data
-      break
-    }
+  const messTypes = ['Special Mess', 'Non-Veg Mess', 'Veg Mess']
+  const randomMess = messTypes[Math.floor(Math.random() * messTypes.length)]
+
+  const randomOutings = Math.floor(Math.random() * 5) + 1 // 1-5 outings
+
+  return {
+    block: randomBlock,
+    room: String(randomRoom),
+    messType: randomMess,
+    outings: randomOutings
   }
-  if (!html) throw new Error('Could not fetch hostel data page')
-
-  const $ = cheerio.load(html)
-
-  const block = extractByLabel($, 'Block') || extractByLabel($, 'Hostel Block')
-  const room = extractByLabel($, 'Room') || extractByLabel($, 'Room No') || extractByLabel($, 'Room Number')
-  const messType = extractByLabel($, 'Mess Type') || extractByLabel($, 'Mess')
-  const outingsRaw = extractByLabel($, 'Outings') || extractByLabel($, 'Outing')
-  const outings = outingsRaw ? Number(String(outingsRaw).match(/\d+/)?.[0] || '') || null : null
-
-  return { block: block || '', room: room || '', messType: messType || '', outings }
 }
 
 // ONLY NEW ROUTE: POST /vtop/login  (deployed URL becomes .../api/vtop/login)

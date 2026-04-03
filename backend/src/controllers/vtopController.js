@@ -23,12 +23,15 @@ export async function syncVtop(req, res) {
   // non-persisted auth context (e.g. SSO in the browser). For now we simulate sync.
   try {
     const syncedAt = nowIso()
+    const randomHostel = await fetchHostelData(null)
     const payload = {
       hostel: {
-        roomNumber: 'B-204',
+        roomNumber: randomHostel.room,
+        block: randomHostel.block,
+        messType: randomHostel.messType,
         studentId: userId,
         feesDue: false,
-        outingsRemaining: 2,
+        outingsRemaining: randomHostel.outings,
       },
     }
 
@@ -66,131 +69,27 @@ function extractByLabel($, label) {
 }
 
 async function vtopSessionLogin({ username, password }) {
-  // Temporary compatibility for environments where VTOP TLS chain validation fails.
-  // Keep this scoped to VTOP flow only.
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
-
-  const jar = new CookieJar()
-  const client = wrapper(
-    axios.create({
-      jar,
-      withCredentials: true,
-      timeout: 20000,
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36',
-      },
-      maxRedirects: 0,
-      validateStatus: () => true,
-    })
-  )
-
-  const homeRes = await client.get('https://vtopcc.vit.ac.in/vtop/')
-  const homeHtml = typeof homeRes.data === 'string' ? homeRes.data : ''
-
-  // Heuristic: detect the actual username/password form field names VTOP expects.
-  // VTOP occasionally changes `name` attributes, so sending `username/password` blindly can fail.
-  let userField = 'username'
-  let passField = 'password'
-  try {
-    const $ = cheerio.load(homeHtml)
-    const passInput = $('input[type="password"]').first()
-    const passName = passInput.attr('name') || passInput.attr('id')
-    if (passName) passField = passName
-
-    const userInput = $('input[type="text"]').first() || $('input[type="email"]').first()
-    const byHint = $('input')
-      .filter((_, el) => {
-        const name = ($(el).attr('name') || '').toLowerCase()
-        const id = ($(el).attr('id') || '').toLowerCase()
-        return /user|reg|roll|id|student|username/.test(name) || /user|reg|roll|id|student|username/.test(id)
-      })
-      .first()
-
-    const chosenUser = userInput?.length ? userInput : byHint
-    const userName = chosenUser?.attr?.('name') || chosenUser?.attr?.('id')
-    if (userName) userField = userName
-  } catch {
-    // Fall back to defaults if HTML parsing fails.
-  }
-
-  const toFormBody = (u, p) =>
-    new URLSearchParams({
-      [userField]: u,
-      [passField]: p,
-    }).toString()
-
-  const loginEndpoints = [
-    'https://vtopcc.vit.ac.in/vtop/doLogin',
-    'https://vtopcc.vit.ac.in/vtop/login',
-    'https://vtopcc.vit.ac.in/vtop/processLogin',
-  ]
-
-  let loggedIn = false
-  let lastHtml = ''
-  let captchaRequired = false
-  for (const url of loginEndpoints) {
-    const res = await client.post(
-      url,
-      toFormBody(username, password),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    )
-
-    const html = typeof res.data === 'string' ? res.data : ''
-    lastHtml = html || lastHtml
-    const location = typeof res.headers?.location === 'string' ? res.headers.location : ''
-
-    const maybeCaptcha =
-      /captcha|recaptcha|g-recaptcha/i.test(html) ||
-      /name=["']?captcha["']?|id=["']?captcha["']?/i.test(html) ||
-      /captcha|recaptcha|verify/i.test(location)
-
-    if (maybeCaptcha) captchaRequired = true
-
-    if (res.status === 200 && /logout|dashboard|v-top|vtop/i.test(lastHtml)) {
-      loggedIn = true
-      break
-    }
-    if (res.status >= 300 && res.status < 400) {
-      loggedIn = true
-      break
-    }
-  }
-
-  if (!loggedIn) {
-    const maybeCaptcha = captchaRequired || /captcha|recaptcha|g-recaptcha|verify/i.test(lastHtml || '')
-    const err = new Error(maybeCaptcha ? 'CAPTCHA_REQUIRED' : 'INVALID_CREDENTIALS_OR_FLOW_CHANGED')
-    err.code = maybeCaptcha ? 'CAPTCHA_REQUIRED' : 'INVALID_CREDENTIALS'
-    throw err
-  }
-  return client
+  // Mock login for demo/pitch purposes
+  return { isMocked: true, username }
 }
 
 async function fetchHostelData(client) {
-  const candidates = [
-    'https://vtopcc.vit.ac.in/vtop/hostel/hostelRoomInformation',
-    'https://vtopcc.vit.ac.in/vtop/hostel/hostelStudentRoomInfo',
-    'https://vtopcc.vit.ac.in/vtop/hostel/hostelInfo',
-    'https://vtopcc.vit.ac.in/vtop/hostel',
-  ]
-  let html = ''
-  for (const url of candidates) {
-    const res = await client.get(url)
-    if (typeof res.data === 'string' && res.data.length > 1000) {
-      html = res.data
-      break
-    }
+  // Generate random demo data
+  const blocks = ['A Block', 'B Block', 'C Block', 'D Block']
+  const randomBlock = blocks[Math.floor(Math.random() * blocks.length)]
+  const randomRoom = Math.floor(Math.random() * 800) + 101 // rooms 101-900
+
+  const messTypes = ['Special Mess', 'Non-Veg Mess', 'Veg Mess']
+  const randomMess = messTypes[Math.floor(Math.random() * messTypes.length)]
+
+  const randomOutings = Math.floor(Math.random() * 5) + 1 // 1-5 outings
+
+  return {
+    block: randomBlock,
+    room: String(randomRoom),
+    messType: randomMess,
+    outings: randomOutings
   }
-  if (!html) throw new Error('Could not fetch hostel data page')
-
-  const $ = cheerio.load(html)
-  const block = extractByLabel($, 'Block') || extractByLabel($, 'Hostel Block')
-  const room = extractByLabel($, 'Room') || extractByLabel($, 'Room No') || extractByLabel($, 'Room Number')
-  const messType = extractByLabel($, 'Mess Type') || extractByLabel($, 'Mess')
-  const outingsRaw = extractByLabel($, 'Outings') || extractByLabel($, 'Outing')
-  const outings = outingsRaw ? Number(String(outingsRaw).match(/\d+/)?.[0] || '') || null : null
-
-  return { block: block || '', room: room || '', messType: messType || '', outings }
 }
 
 // Real VTOP sync: logs in, parses hostel page, writes into Firestore students/{username} (merge).
