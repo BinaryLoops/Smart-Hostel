@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 <div align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=timeGradient&height=200&section=header&text=🎓%20Smart%20Hostel%20Portal&fontSize=50&fontAlignY=35&animation=twinkling&desc=The%20Next-Gen%20Decentralized%20Hostel%20OS&descSize=20&descAlignY=55" />
 
