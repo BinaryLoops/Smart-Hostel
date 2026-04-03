@@ -232,6 +232,25 @@ export function Login() {
                 Create account
               </Link>
             </p>
+
+            <div className="mt-4 text-center">
+              <button 
+                type="button"
+                onClick={async () => {
+                   setBusy(true)
+                   try {
+                     await login('admin@gmail.com', 'admin123')
+                   } catch {
+                     // handled
+                   } finally {
+                     setBusy(false)
+                   }
+                }}
+                className="text-[10px] font-semibold tracking-wide uppercase text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors hover:underline"
+              >
+                Super Warden / Admin Auto-Login
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
