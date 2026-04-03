@@ -369,5 +369,3 @@ The final frontier of the Smart Hostel Protocol encompasses mass predictive inte
   This system completely and irreversibly re-architects physical hostel physics parameters. <br/><b>Let's sweep this Hackathon. Executing payload deploy...</b> 🚀🔥
 </div>
 =======
-Daal dena 
->>>>>>> 86ba3260b8a9be53ee71d084a591d30031bca6f4
